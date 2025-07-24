@@ -1,36 +1,72 @@
-import React from 'react';
-import { Link } from "react-router-dom";
-import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next'; // Import the hook
+"use client"
+import { Link } from "react-router-dom"
+import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next"
+import { ArrowRight, Sparkles, Shield, Users } from "lucide-react"
 
 const PublicHero = () => {
-    const { t } = useTranslation(); // Initialize the hook
+  const { t } = useTranslation()
 
-    return (
-        <section className="min-h-screen w-full flex items-center justify-center text-center px-4">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="bg-slate-900/30 backdrop-blur-sm p-10 rounded-2xl border border-slate-700/50"
-            >
-                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-4">
-                    <span dangerouslySetInnerHTML={{ __html: t('publicHero.title', { nsSeparator: '||' }) }} />
-                </h1>
-                <p className="max-w-3xl mx-auto text-lg md:text-xl text-slate-300 mb-8">
-                    {t('publicHero.subtitle')}
-                </p>
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                    <Link to="/register" className="w-full sm:w-auto px-8 py-3 font-bold text-white bg-cyan-500 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-cyan-500/20">
-                        {t('publicHero.getStarted')}
-                    </Link>
-                    <Link to="/login" className="w-full sm:w-auto px-8 py-3 font-bold text-white bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600 rounded-full transition-all duration-300 transform hover:scale-105">
-                        {t('publicHero.login')}
-                    </Link>
-                </div>
-            </motion.div>
-        </section>
-    );
-};
+  return (
+    <section className="min-h-screen w-full flex items-center justify-center text-center container-padding relative overflow-hidden">
+      {/* Background decorations - Updated for light theme */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-transparent to-blue-50/50"></div>
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-cyan-200/30 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
+      <div
+        className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-blue-200/30 to-transparent rounded-full blur-3xl animate-pulse-slow"
+        style={{ animationDelay: "2s" }}
+      ></div>
 
-export default PublicHero;
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="glass-card p-12 w-full max-w-6xl relative z-10"
+      >
+        <div className="mb-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <Sparkles size={24} className="text-cyan-600" />
+            <span className="text-cyan-700 font-semibold">AI-Powered Legal Assistant</span>
+            <Sparkles size={24} className="text-cyan-600" />
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6">
+            <span dangerouslySetInnerHTML={{ __html: t("publicHero.title", { nsSeparator: "||" }) }} />
+          </h1>
+
+          <p className="max-w-4xl mx-auto text-xl md:text-2xl text-slate-700 mb-12 leading-relaxed">
+            {t("publicHero.subtitle")}
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-12">
+          <Link to="/register" className="btn-primary text-lg py-4 px-8 rounded-2xl shadow-xl shadow-cyan-200/50 group">
+            {t("publicHero.getStarted")}
+            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <Link to="/login" className="btn-secondary text-lg py-4 px-8 rounded-2xl group">
+            {t("publicHero.login")}
+          </Link>
+        </div>
+
+        {/* Trust indicators */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-slate-200">
+          <div className="flex items-center justify-center gap-3 text-slate-700">
+            <Shield size={20} className="text-cyan-600" />
+            <span>Secure & Private</span>
+          </div>
+          <div className="flex items-center justify-center gap-3 text-slate-700">
+            <Users size={20} className="text-cyan-600" />
+            <span>Trusted by Thousands</span>
+          </div>
+          <div className="flex items-center justify-center gap-3 text-slate-700">
+            <Sparkles size={20} className="text-cyan-600" />
+            <span>AI-Powered</span>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
+export default PublicHero

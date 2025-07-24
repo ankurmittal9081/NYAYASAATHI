@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import apiClient from "../api/axiosConfig"
-import GlassCard from "../components/GlassCard"
 import Spinner from "../components/Spinner"
 import SmartAssistantModal from "../components/SmartAssistantModal"
 import AddIssueModal from "../components/AddIssueModal"
@@ -38,14 +37,14 @@ const StatCard = ({ icon, title, value, color, onClick }) => (
   <motion.div
     variants={itemVariants}
     whileHover={{ scale: 1.02 }}
-    className={`${color} p-6 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg`}
+    className={`${color} p-6 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg border`}
     onClick={onClick}
   >
     <div className="flex items-center gap-4">
-      <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">{icon}</div>
+      <div className="w-12 h-12 rounded-lg bg-white/80 flex items-center justify-center shadow-sm">{icon}</div>
       <div>
-        <p className="text-white/80 text-sm">{title}</p>
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-slate-600 text-sm">{title}</p>
+        <p className="text-2xl font-bold text-slate-900">{value}</p>
       </div>
     </div>
   </motion.div>
@@ -106,16 +105,16 @@ const DashboardPage = () => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "resolved":
-        return "bg-green-500/20 text-green-300"
+        return "bg-green-100 text-green-700 border-green-200"
       case "submitted":
       case "in progress":
-        return "bg-blue-500/20 text-blue-300"
+        return "bg-blue-100 text-blue-700 border-blue-200"
       case "pending":
-        return "bg-yellow-500/20 text-yellow-300"
+        return "bg-yellow-100 text-yellow-700 border-yellow-200"
       case "escalated":
-        return "bg-orange-500/20 text-orange-300"
+        return "bg-orange-100 text-orange-700 border-orange-200"
       default:
-        return "bg-gray-500/20 text-gray-300"
+        return "bg-slate-100 text-slate-700 border-slate-200"
     }
   }
 
@@ -128,7 +127,7 @@ const DashboardPage = () => {
 
   if (error)
     return (
-      <div className="w-full max-w-4xl text-center p-8 bg-red-500/10 text-red-300 rounded-lg">
+      <div className="w-full max-w-4xl text-center p-8 bg-red-50 text-red-700 rounded-lg border border-red-200">
         <AlertCircle className="mx-auto mb-4" size={48} />
         <p className="font-semibold">An Error Occurred</p>
         <p>{error}</p>
@@ -146,8 +145,8 @@ const DashboardPage = () => {
         {/* Header Section */}
         <motion.div className="flex flex-wrap justify-between items-center gap-4" variants={itemVariants}>
           <div>
-            <h1 className="text-4xl font-bold text-white tracking-tight">Welcome back, {user?.fullName}!</h1>
-            <p className="text-slate-400 mt-2">Manage your legal issues and documents</p>
+            <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.fullName}!</h1>
+            <p className="text-slate-600 mt-2">Manage your legal issues and documents</p>
           </div>
 
           <div className="flex gap-3">
@@ -161,31 +160,31 @@ const DashboardPage = () => {
         {/* Stats Cards */}
         <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" variants={itemVariants}>
           <StatCard
-            icon={<AlertCircle size={24} />}
+            icon={<AlertCircle size={24} className="text-red-600" />}
             title="Active Issues"
             value={data.issues.filter((i) => i.status !== "Resolved").length}
-            color="bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-500/30"
+            color="bg-gradient-to-br from-red-50 to-pink-50 border-red-200"
           />
           <StatCard
-            icon={<FileText size={24} />}
+            icon={<FileText size={24} className="text-blue-600" />}
             title="Total Documents"
             value={data.documents.length}
-            color="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30"
+            color="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200"
           />
           <StatCard
-            icon={<BarChart3 size={24} />}
+            icon={<BarChart3 size={24} className="text-green-600" />}
             title="Resolved Issues"
             value={data.issues.filter((i) => i.status === "Resolved").length}
-            color="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30"
+            color="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
           />
         </motion.div>
 
         {/* Legal Issues Section */}
         <motion.div variants={itemVariants}>
-          <GlassCard>
+          <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-cyan-400 flex items-center gap-2">
-                <AlertCircle size={24} />
+              <h2 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
+                <AlertCircle size={24} className="text-cyan-600" />
                 My Legal Issues
               </h2>
               <button onClick={() => setAddIssueModalOpen(true)} className="btn-secondary flex items-center gap-2">
@@ -204,18 +203,18 @@ const DashboardPage = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="p-6 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-slate-500 transition-all group"
+                      className="p-6 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-all group"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-bold text-white text-lg">{issue.issueType}</h3>
-                            <span className={`text-xs px-3 py-1 rounded-full ${getStatusColor(issue.status)}`}>
+                            <h3 className="font-bold text-slate-900 text-lg">{issue.issueType}</h3>
+                            <span className={`text-xs px-3 py-1 rounded-full border ${getStatusColor(issue.status)}`}>
                               {issue.status}
                             </span>
                           </div>
-                          <p className="text-slate-300 mb-3 line-clamp-2">{issue.description}</p>
-                          <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
+                          <p className="text-slate-700 mb-3 line-clamp-2">{issue.description}</p>
+                          <div className="flex items-center gap-4 text-sm text-slate-500 mb-3">
                             <span className="flex items-center gap-1">
                               <Calendar size={14} />
                               {new Date(issue.createdAt).toLocaleDateString()}
@@ -230,7 +229,7 @@ const DashboardPage = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleViewDetails("issues", issue._id)}
-                              className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                              className="flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
                             >
                               <Eye size={14} />
                               View Details
@@ -239,7 +238,7 @@ const DashboardPage = () => {
                         </div>
                         <button
                           onClick={() => handleDelete("issues", issue._id)}
-                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -249,23 +248,23 @@ const DashboardPage = () => {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="text-center py-12 text-slate-400">
-                <AlertCircle className="mx-auto mb-4 text-cyan-400" size={48} />
+              <div className="text-center py-12 text-slate-500">
+                <AlertCircle className="mx-auto mb-4 text-cyan-600" size={48} />
                 <p className="text-lg mb-2">No legal issues found</p>
                 <p className="text-sm">
                   Click "Add Issue" or use the Smart Assistant to create your first legal issue.
                 </p>
               </div>
             )}
-          </GlassCard>
+          </div>
         </motion.div>
 
         {/* Documents Section */}
         <motion.div variants={itemVariants}>
-          <GlassCard>
+          <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-cyan-400 flex items-center gap-2">
-                <FileText size={24} />
+              <h2 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
+                <FileText size={24} className="text-cyan-600" />
                 My Documents
               </h2>
               <button onClick={() => setAddDocumentModalOpen(true)} className="btn-secondary flex items-center gap-2">
@@ -284,26 +283,26 @@ const DashboardPage = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="p-6 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-slate-500 transition-all group"
+                      className="p-6 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-all group"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-4 flex-1">
-                          <div className="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                            <FileText className="text-cyan-400" size={20} />
+                          <div className="w-12 h-12 rounded-lg bg-cyan-100 flex items-center justify-center">
+                            <FileText className="text-cyan-600" size={20} />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-bold text-white text-lg mb-1">{doc.documentType}</h3>
+                            <h3 className="font-bold text-slate-900 text-lg mb-1">{doc.documentType}</h3>
                             <div className="flex items-center gap-4 mb-3">
                               <span
-                                className={`text-xs px-3 py-1 rounded-full ${getStatusColor(doc.submissionStatus)}`}
+                                className={`text-xs px-3 py-1 rounded-full border ${getStatusColor(doc.submissionStatus)}`}
                               >
                                 {doc.submissionStatus}
                               </span>
                               {doc.issueId && (
-                                <span className="text-sm text-slate-400">Related to: {doc.issueId.issueType}</span>
+                                <span className="text-sm text-slate-500">Related to: {doc.issueId.issueType}</span>
                               )}
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
+                            <div className="flex items-center gap-4 text-sm text-slate-500 mb-3">
                               <span className="flex items-center gap-1">
                                 <Calendar size={14} />
                                 {new Date(doc.createdAt).toLocaleDateString()}
@@ -312,7 +311,7 @@ const DashboardPage = () => {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleViewDetails("documents", doc._id)}
-                                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                                className="flex items-center gap-1 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
                               >
                                 <Eye size={14} />
                                 View Details
@@ -321,7 +320,7 @@ const DashboardPage = () => {
                                 href={doc.fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-green-400 hover:text-green-300 text-sm font-medium"
+                                className="flex items-center gap-1 text-green-600 hover:text-green-700 text-sm font-medium"
                               >
                                 <ExternalLink size={14} />
                                 Open File
@@ -331,7 +330,7 @@ const DashboardPage = () => {
                         </div>
                         <button
                           onClick={() => handleDelete("documents", doc._id)}
-                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -341,15 +340,15 @@ const DashboardPage = () => {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="text-center py-12 text-slate-400">
-                <FileText className="mx-auto mb-4 text-cyan-400" size={48} />
+              <div className="text-center py-12 text-slate-500">
+                <FileText className="mx-auto mb-4 text-cyan-600" size={48} />
                 <p className="text-lg mb-2">No documents found</p>
                 <p className="text-sm">
                   Click "Add Document" or use the Smart Assistant to upload your first document.
                 </p>
               </div>
             )}
-          </GlassCard>
+          </div>
         </motion.div>
       </motion.div>
 
