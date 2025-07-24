@@ -22,6 +22,7 @@ import {
 import toast from "react-hot-toast"
 import apiClient from "../api/axiosConfig"
 import { useTranslation } from "react-i18next"
+import { useAuth } from "../context/AuthContext"
 
 const modalVariants = {
   hidden: { opacity: 0, y: 50, scale: 0.9 },
@@ -31,6 +32,7 @@ const modalVariants = {
 
 const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
   const [mode, setMode] = useState("text") // 'text' or 'voice'
   const [assistantType, setAssistantType] = useState("legal") // 'legal' or 'data'
   const [isRecording, setIsRecording] = useState(false)
@@ -41,7 +43,25 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({})
   const recognitionRef = useRef(null)
 
-  // Legal knowledge base
+  // Role-based permissions
+  const getRolePermissions = (userRole) => {
+    switch (userRole) {
+      case "citizen":
+        return ["issue", "document"]
+      case "employee":
+        return ["issue", "document", "paralegal"] // Employees can help create paralegals
+      case "admin":
+        return ["issue", "document", "user", "employee", "kiosk", "paralegal"]
+      case "paralegal":
+        return ["issue", "document"]
+      default:
+        return ["issue", "document"]
+    }
+  }
+
+  const allowedActions = getRolePermissions(user?.role)
+
+  // Legal knowledge base for legal assistant
   const legalKnowledge = {
     en: {
       aadhaar: {
@@ -269,7 +289,7 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
       lowerText.includes("मुद्दा") ||
       lowerText.includes("समस्या")
     ) {
-      return { type: "issue", data: {} }
+      return allowedActions.includes("issue") ? { type: "issue", data: {} } : null
     }
     if (
       lowerText.includes("document") ||
@@ -278,19 +298,19 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
       lowerText.includes("दस्तावेज़") ||
       lowerText.includes("फाइल")
     ) {
-      return { type: "document", data: {} }
+      return allowedActions.includes("document") ? { type: "document", data: {} } : null
     }
     if (lowerText.includes("user") || lowerText.includes("citizen") || lowerText.includes("उपयोगकर्ता")) {
-      return { type: "user", data: {} }
+      return allowedActions.includes("user") ? { type: "user", data: {} } : null
     }
     if (lowerText.includes("employee") || lowerText.includes("staff") || lowerText.includes("कर्मचारी")) {
-      return { type: "employee", data: {} }
+      return allowedActions.includes("employee") ? { type: "employee", data: {} } : null
     }
     if (lowerText.includes("kiosk") || lowerText.includes("center") || lowerText.includes("केंद्र")) {
-      return { type: "kiosk", data: {} }
+      return allowedActions.includes("kiosk") ? { type: "kiosk", data: {} } : null
     }
     if (lowerText.includes("paralegal") || lowerText.includes("lawyer") || lowerText.includes("वकील")) {
-      return { type: "paralegal", data: {} }
+      return allowedActions.includes("paralegal") ? { type: "paralegal", data: {} } : null
     }
 
     return null
@@ -460,11 +480,16 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
             : "What type of document do you want to add? (e.g., Aadhaar Card, Land Papers)"
         if (!data.issueId)
           return isHindi
-            ? "यह दस्तावेज़ किस मुद्दे से संबंधित है? (मुद्दा ID दें या 'नहीं' कहें य���ि संबंधित नहीं है)"
+            ? "यह दस्तावेज़ किस मुद्दे से संबंधित है? (मुद्दा ID दें या 'नहीं' कहें यदि संबंधित नहीं है)"
             : "Enter the Issue ID this document relates to (or 'none' if not related):"
         return "COMPLETE"
 
       case "user":
+        if (!allowedActions.includes("user")) {
+          return isHindi
+            ? "क्षमा करें, आपको उपयोगकर्ता बनाने की अनुमति नहीं है।"
+            : "Sorry, you don't have permission to create users."
+        }
         if (!data.fullName) return isHindi ? "पूरा नाम क्या है?" : "What's the full name?"
         if (!data.email) return isHindi ? "ईमेल पता क्या है?" : "What's the email address?"
         if (!data.aadhaarNumber) return isHindi ? "आधार नंबर क्या है? (12 अंक)" : "What's the Aadhaar number? (12 digits)"
@@ -476,6 +501,11 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
         return "COMPLETE"
 
       case "employee":
+        if (!allowedActions.includes("employee")) {
+          return isHindi
+            ? "क्षमा करें, आपको कर्मचारी बनाने की अनुमति नहीं है।"
+            : "Sorry, you don't have permission to create employees."
+        }
         if (!data.fullName) return isHindi ? "कर्मचारी का पूरा नाम क्या है?" : "What's the employee's full name?"
         if (!data.email) return isHindi ? "ईमेल पता क्या है?" : "What's the email address?"
         if (!data.aadhaarNumber) return isHindi ? "आधार नंबर क्या है?" : "What's the Aadhaar number?"
@@ -485,6 +515,11 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
         return "COMPLETE"
 
       case "kiosk":
+        if (!allowedActions.includes("kiosk")) {
+          return isHindi
+            ? "क्षमा करें, आपको कियोस्क बनाने की अनुमति नहीं है।"
+            : "Sorry, you don't have permission to create kiosks."
+        }
         if (!data.location) return isHindi ? "कियोस्क कहाँ स्थित है?" : "Where is the kiosk located?"
         if (!data.village) return isHindi ? "कौन सा गाँव?" : "Which village?"
         if (!data.district) return isHindi ? "कौन सा जिला?" : "Which district?"
@@ -494,6 +529,11 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
         return "COMPLETE"
 
       case "paralegal":
+        if (!allowedActions.includes("paralegal")) {
+          return isHindi
+            ? "क्षमा करें, आपको पैरालीगल बनाने की अनुमति नहीं है।"
+            : "Sorry, you don't have permission to create paralegals."
+        }
         if (!data.fullName) return isHindi ? "पैरालीगल का पूरा नाम क्या है?" : "What's the paralegal's full name?"
         if (!data.email) return isHindi ? "ईमेल पता क्या है?" : "What's the email address?"
         if (!data.aadhaarNumber) return isHindi ? "आधार नंबर क्या है?" : "What's the Aadhaar number?"
@@ -732,8 +772,8 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
                         ? "पूछें: 'आधार कार्ड कैसे अपडेट करें', 'पेंशन के लिए आवेदन', 'भूमि विवाद'"
                         : "Try: 'How to update Aadhaar', 'Apply for pension', 'Land dispute'"
                       : i18n.language === "hi"
-                        ? "कहें: 'मुद्दा बनाएं', 'दस्तावेज़ जोड़ें', 'उपयोगकर्ता जोड़ें'"
-                        : "Try: 'Create issue', 'Add document', 'Add user'"}
+                        ? `कहें: ${allowedActions.includes("issue") ? "'मुद्दा बनाएं'" : ""} ${allowedActions.includes("document") ? "'दस्तावेज़ जोड़ें'" : ""}`
+                        : `Try: ${allowedActions.includes("issue") ? "'Create issue'" : ""} ${allowedActions.includes("document") ? "'Add document'" : ""}`}
                   </p>
                 </div>
               )}
@@ -745,7 +785,7 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
                       msg.isUser ? "bg-cyan-600 text-white" : "bg-slate-700 text-slate-200"
                     }`}
                   >
-                    {msg.message}
+                    <div className="whitespace-pre-wrap">{msg.message}</div>
                   </div>
                 </div>
               ))}
@@ -813,5 +853,4 @@ const SmartAssistantModal = ({ isOpen, onClose, onSuccess }) => {
     </AnimatePresence>
   )
 }
-
 export default SmartAssistantModal

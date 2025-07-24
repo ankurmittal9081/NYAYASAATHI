@@ -13,6 +13,8 @@ import ProfilePage from "./pages/ProfilePage"
 import AdminPanelPage from "./pages/AdminPanelPage"
 import IssueDetailPage from "./pages/IssueDetailPage"
 import DocumentDetailPage from "./pages/DocumentDetailPage"
+import LegalHelpPage from "./pages/legal-help/LegalHelpPage"
+import DocumentSummarizer from "./pages/legal-help/DocumentSummarizer"
 import NotFoundPage from "./pages/NotFoundPage"
 import Spinner from "./components/Spinner"
 
@@ -50,6 +52,10 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* Legal Help routes - accessible to everyone */}
+        <Route path="/legal-help" element={<LegalHelpPage />} />
+        <Route path="/legal-help/document-summarizer" element={<DocumentSummarizer />} />
 
         {/* Authenticated routes are nested inside the ProtectedRoute wrapper */}
         <Route element={<ProtectedRoute />}>

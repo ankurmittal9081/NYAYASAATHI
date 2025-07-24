@@ -5,13 +5,13 @@ import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import PublicHero from "./HomePage/PublicHero"
 import AuthenticatedHero from "./HomePage/AuthenticatedHero"
-import UnifiedCommandModal from "../components/UnifiedCommandModal"
+import SmartAssistantModal from "../components/SmartAssistantModal"
 import FeaturesSection from "./HomePage/FeaturesSection"
 import AboutSection from "./HomePage/AboutSection"
 import WhyNowSection from "./HomePage/WhyNowSection"
 import HowItWorksSection from "./HomePage/HowItWorksSection"
 import Spinner from "../components/Spinner"
-import { ArrowRight, FileText, AlertCircle, BarChart3 } from "lucide-react"
+import { ArrowRight, FileText, AlertCircle, BarChart3, Scale, BookOpen } from "lucide-react"
 import { motion } from "framer-motion"
 
 const QuickActionCard = ({ icon, title, description, onClick, color }) => (
@@ -37,7 +37,7 @@ const QuickActionCard = ({ icon, title, description, onClick, color }) => (
 
 const HomePage = () => {
   const { isAuthenticated, isLoading, user } = useAuth()
-  const [isUnifiedModalOpen, setUnifiedModalOpen] = useState(false)
+  const [isSmartAssistantModalOpen, setSmartAssistantModalOpen] = useState(false)
   const navigate = useNavigate()
 
   if (isLoading) {
@@ -66,7 +66,7 @@ const HomePage = () => {
       <main className="relative z-10">
         {isAuthenticated ? (
           <>
-            <AuthenticatedHero onVoiceQueryClick={() => setUnifiedModalOpen(true)} />
+            <AuthenticatedHero onVoiceQueryClick={() => setSmartAssistantModalOpen(true)} />
 
             {/* Quick Actions Section for Authenticated Users */}
             <section className="py-16 px-4">
@@ -81,7 +81,7 @@ const HomePage = () => {
                   <p className="text-slate-400 text-lg">Manage your legal matters efficiently</p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <QuickActionCard
                     icon={<BarChart3 size={24} />}
                     title="View Dashboard"
@@ -93,15 +93,22 @@ const HomePage = () => {
                     icon={<AlertCircle size={24} />}
                     title="Report New Issue"
                     description="Quickly report a new legal issue or problem"
-                    onClick={() => setUnifiedModalOpen(true)}
+                    onClick={() => setSmartAssistantModalOpen(true)}
                     color="bg-gradient-to-br from-red-500/20 to-pink-500/20"
                   />
                   <QuickActionCard
                     icon={<FileText size={24} />}
                     title="Upload Document"
                     description="Add important documents to your legal cases"
-                    onClick={() => setUnifiedModalOpen(true)}
+                    onClick={() => setSmartAssistantModalOpen(true)}
                     color="bg-gradient-to-br from-green-500/20 to-emerald-500/20"
+                  />
+                  <QuickActionCard
+                    icon={<Scale size={24} />}
+                    title="Legal Help"
+                    description="Get detailed information about Indian laws and procedures"
+                    onClick={() => navigate("/legal-help")}
+                    color="bg-gradient-to-br from-purple-500/20 to-indigo-500/20"
                   />
                 </div>
 
@@ -124,7 +131,36 @@ const HomePage = () => {
             </section>
           </>
         ) : (
-          <PublicHero />
+          <>
+            <PublicHero />
+
+            {/* Legal Help CTA for Public Users */}
+            <section className="py-16 px-4">
+              <div className="max-w-4xl mx-auto text-center">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 p-8 rounded-xl border border-purple-500/30"
+                >
+                  <Scale className="mx-auto mb-4 text-purple-400" size={48} />
+                  <h2 className="text-2xl font-bold text-white mb-4">Need Legal Help?</h2>
+                  <p className="text-slate-300 mb-6">
+                    Get instant access to comprehensive legal information about Indian laws, procedures, and your
+                    rights. No registration required!
+                  </p>
+                  <button
+                    onClick={() => navigate("/legal-help")}
+                    className="btn-primary inline-flex items-center gap-2"
+                  >
+                    <BookOpen size={20} />
+                    Access Legal Help
+                    <ArrowRight size={20} />
+                  </button>
+                </motion.div>
+              </div>
+            </section>
+          </>
         )}
 
         <FeaturesSection />
@@ -133,9 +169,9 @@ const HomePage = () => {
         <HowItWorksSection />
       </main>
 
-      <UnifiedCommandModal
-        isOpen={isUnifiedModalOpen}
-        onClose={() => setUnifiedModalOpen(false)}
+      <SmartAssistantModal
+        isOpen={isSmartAssistantModalOpen}
+        onClose={() => setSmartAssistantModalOpen(false)}
         onSuccess={() => {
           // Optional: Navigate to dashboard after successful action
           setTimeout(() => navigate("/dashboard"), 1000)

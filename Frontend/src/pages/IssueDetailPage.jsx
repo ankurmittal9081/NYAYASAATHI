@@ -3,7 +3,18 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowLeft, AlertCircle, Calendar, User, MapPin, Phone, FileText, Edit, Trash2 } from "lucide-react"
+import {
+  ArrowLeft,
+  AlertCircle,
+  Calendar,
+  User,
+  MapPin,
+  Phone,
+  FileText,
+  Edit,
+  Trash2,
+  ExternalLink,
+} from "lucide-react"
 import apiClient from "../api/axiosConfig"
 import GlassCard from "../components/GlassCard"
 import Spinner from "../components/Spinner"
@@ -19,16 +30,21 @@ const IssueDetailPage = () => {
   useEffect(() => {
     const fetchIssue = async () => {
       try {
+        console.log("Fetching issue with ID:", id)
         const response = await apiClient.get(`/issues/${id}`)
+        console.log("Issue response:", response.data)
         setIssue(response.data.data)
       } catch (err) {
+        console.error("Error fetching issue:", err)
         setError(err.message || "Failed to fetch issue details")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchIssue()
+    if (id) {
+      fetchIssue()
+    }
   }, [id])
 
   const handleDelete = async () => {
@@ -48,21 +64,22 @@ const IssueDetailPage = () => {
     switch (status?.toLowerCase()) {
       case "resolved":
         return "bg-green-500/20 text-green-300 border-green-500/30"
-      case "submitted":
       case "in progress":
         return "bg-blue-500/20 text-blue-300 border-blue-500/30"
-      case "pending":
-        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
       case "escalated":
         return "bg-orange-500/20 text-orange-300 border-orange-500/30"
+      case "pending":
+        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+      case "closed":
+        return "bg-gray-500/20 text-gray-300 border-gray-500/30"
       default:
         return "bg-gray-500/20 text-gray-300 border-gray-500/30"
     }
   }
 
   if (loading) return <Spinner />
-  if (error) return <div className="text-red-400 p-4">{error}</div>
-  if (!issue) return <div className="text-slate-400 p-4">Issue not found</div>
+  if (error) return <div className="text-red-400 p-4 text-center">{error}</div>
+  if (!issue) return <div className="text-slate-400 p-4 text-center">Issue not found</div>
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-4xl space-y-6">
@@ -122,6 +139,12 @@ const IssueDetailPage = () => {
                   <Calendar className="text-slate-400" size={16} />
                   <span className="text-slate-300">Updated: {new Date(issue.updatedAt).toLocaleDateString()}</span>
                 </div>
+                {issue.priority && (
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="text-slate-400" size={16} />
+                    <span className="text-slate-300">Priority: {issue.priority}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -135,6 +158,10 @@ const IssueDetailPage = () => {
                 <div className="flex items-center gap-3">
                   <Phone className="text-slate-400" size={16} />
                   <span className="text-slate-300">{issue.userId.phoneNumber || "Not provided"}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <FileText className="text-slate-400" size={16} />
+                  <span className="text-slate-300">{issue.userId.email}</span>
                 </div>
               </div>
             </div>
@@ -152,6 +179,9 @@ const IssueDetailPage = () => {
                   {issue.kiosk.village}, {issue.kiosk.district}
                 </p>
                 <p className="text-slate-300 text-sm">Operator: {issue.kiosk.operatorName}</p>
+                {issue.kiosk.organizationType && (
+                  <p className="text-slate-300 text-sm">Organization: {issue.kiosk.organizationType}</p>
+                )}
               </div>
             </div>
           )}
@@ -162,11 +192,13 @@ const IssueDetailPage = () => {
               <div className="bg-slate-700/50 p-4 rounded-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <User className="text-slate-400" size={16} />
-                  <span className="text-white font-medium">{issue.assignedParalegal.user.fullName}</span>
+                  <span className="text-white font-medium">
+                    {issue.assignedParalegal.user?.fullName || "Not assigned"}
+                  </span>
                 </div>
                 <p className="text-slate-300 text-sm">Phone: {issue.assignedParalegal.phoneNumber}</p>
                 <p className="text-slate-300 text-sm">
-                  Expertise: {issue.assignedParalegal.areasOfExpertise.join(", ")}
+                  Expertise: {issue.assignedParalegal.areasOfExpertise?.join(", ") || "General"}
                 </p>
               </div>
             </div>
@@ -177,10 +209,23 @@ const IssueDetailPage = () => {
               <h3 className="text-lg font-semibold text-cyan-400 mb-3">Related Documents</h3>
               <div className="space-y-2">
                 {issue.documents.map((doc) => (
-                  <div key={doc._id} className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                    <FileText className="text-cyan-400" size={16} />
-                    <span className="text-white">{doc.documentType}</span>
-                    <span className="text-slate-400 text-sm">{new Date(doc.createdAt).toLocaleDateString()}</span>
+                  <div key={doc._id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="text-cyan-400" size={16} />
+                      <div>
+                        <span className="text-white">{doc.documentType}</span>
+                        <p className="text-slate-400 text-sm">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                    >
+                      <ExternalLink size={14} />
+                      View
+                    </a>
                   </div>
                 ))}
               </div>
