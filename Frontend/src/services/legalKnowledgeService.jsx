@@ -2,7 +2,7 @@
 // and provides a unified interface for the smart assistant
 
 const INDIAN_KANOON_API_BASE = "https://api.indiankanoon.org/search/"
-const LEGAL_API_KEY = process.env.REACT_APP_LEGAL_API_KEY || "demo_key"
+const LEGAL_API_KEY = process.env.REACT_APP_GROQ_API_KEY||"demo_key"
 
 // Comprehensive knowledge base of Indian laws
 const indianLegalKnowledge = {

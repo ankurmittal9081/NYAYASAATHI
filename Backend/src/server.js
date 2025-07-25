@@ -9,6 +9,7 @@ import { errorMiddleware } from "./middleware/errorMiddleware.js"
 import authMiddleware from "./middleware/authMiddleware.js"
 
 // Import all routes
+import aiRoutes from "./routes/ai.routes.js" // <-- We will use this now
 import authRoutes from "./routes/authRoutes.js"
 import adminRoutes from "./routes/adminRoutes.js"
 import citizenRoutes from "./routes/citizenRoutes.js"
@@ -24,7 +25,6 @@ import voiceQueryRoutes from "./routes/voiceQueryRoutes.js"
 const app = express()
 const PORT = process.env.PORT || 5001
 
-// Parse CORS origins
 const allowedOrigins = process.env.CORS_ORIGIN?.split(",").map((origin) => origin.trim()) || []
 
 if (allowedOrigins.length === 0) {
@@ -32,71 +32,58 @@ if (allowedOrigins.length === 0) {
   process.exit(1)
 }
 
-// CORS Configuration
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl requests, etc.)
-    if (!origin) return callback(null, true)
-
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
-      console.log(`⛔ CORS blocked origin: ${origin}`)
       callback(new Error(`Not allowed by CORS: ${origin}`))
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
 }
 
-// Middleware
 app.use(cors(corsOptions))
 app.set("trust proxy", 1)
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 app.use(cookieParser())
 
-// Routes
-app.get("/", (req, res) => res.send("Backend is running."))
-
-// API Routes
+// --- Main API Router ---
 const apiRouter = express.Router()
 
-// Health check
-apiRouter.get("/", (req, res) => res.json({ message: "API is Live", timestamp: new Date().toISOString() }))
+// Health check and public routes
+apiRouter.get("/", (req, res) => res.json({ message: "API is Live" }))
+apiRouter.use("/auth", authRoutes)
 
-// Public routes (no auth required)
-apiRouter.use("/auth", authRoutes) // FIXED: Added leading slash
+// --- THIS IS THE CRITICAL FIX ---
+// All routes below this point are protected and will require a valid JWT
+apiRouter.use(authMiddleware)
 
-// Protected routes (auth required)
-apiRouter.use("/admins", authMiddleware, adminRoutes)
-apiRouter.use("/citizens", authMiddleware, citizenRoutes)
-apiRouter.use("/documents", authMiddleware, documentRoutes)
-apiRouter.use("/employees", authMiddleware, employeeRoutes)
-apiRouter.use("/kiosks", authMiddleware, kioskRoutes)
-apiRouter.use("/issues", authMiddleware, legalIssueRoutes)
-apiRouter.use("/paralegals", authMiddleware, paralegalRoutes)
-apiRouter.use("/subscriptions", authMiddleware, subscriptionRoutes)
-apiRouter.use("/users", authMiddleware, userRoutes)
-apiRouter.use("/voicequeries", authMiddleware, voiceQueryRoutes)
+// Protected routes are now correctly organized
+apiRouter.use("/ai", aiRoutes) // <-- The AI route is now live and protected
+apiRouter.use("/admins", adminRoutes)
+apiRouter.use("/citizens", citizenRoutes)
+apiRouter.use("/documents", documentRoutes)
+apiRouter.use("/employees", employeeRoutes)
+apiRouter.use("/kiosks", kioskRoutes)
+apiRouter.use("/issues", legalIssueRoutes)
+apiRouter.use("/paralegals", paralegalRoutes)
+apiRouter.use("/subscriptions", subscriptionRoutes)
+apiRouter.use("/users", userRoutes)
+apiRouter.use("/voicequeries", voiceQueryRoutes)
 
-// Mount API router
+// Mount the entire API router to the /api path
 app.use("/api", apiRouter)
 
-// Error handling middleware (must be last)
+app.get("/", (req, res) => res.send("NyayaSaathi Backend is running."))
 app.use(errorMiddleware)
 
-// Start server
 connectDB()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Server connected to DB and running at port ${PORT}`)
-      console.log(`📍 Environment: ${process.env.NODE_ENV}`)
-      console.log(`🌐 Allowed Origins: ${allowedOrigins.join(", ")}`)
-    })
+    app.listen(PORT, () => console.log(`🚀 Server is running at port ${PORT}`))
   })
   .catch((err) => {
-    console.error("Failed to start server", err)
+    console.error("MONGO DB connection failed !!!", err)
     process.exit(1)
   })
