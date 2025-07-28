@@ -3,25 +3,39 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, Loader2, X, MessageSquare } from "lucide-react";
-import { aiService } from "../services/aiService"; // <-- Use the same new service
+import { aiService } from "../services/aiService";
 
 const modalVariants = {
   hidden: { opacity: 0, y: 50, scale: 0.9 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 20, stiffness: 250 } },
-  exit: { opacity: 0, y: -50, scale: 0.9, transition: { duration: 0.2 } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", damping: 20, stiffness: 250 },
+  },
+  exit: {
+    opacity: 0,
+    y: -50,
+    scale: 0.9,
+    transition: { duration: 0.2 },
+  },
 };
 
 const AIMessage = ({ text }) => {
-    const parts = text.split(/(\*\*.*?\*\*)/g).filter(part => part);
-    return (
-        <div className="whitespace-pre-wrap">
-            {parts.map((part, index) => 
-                part.startsWith('**') && part.endsWith('**') ? 
-                <strong key={index} className="text-slate-900">{part.slice(2, -2)}</strong> : 
-                part
-            )}
-        </div>
-    );
+  const parts = text.split(/(\*\*.*?\*\*)/g).filter((part) => part);
+  return (
+    <div className="whitespace-pre-wrap">
+      {parts.map((part, index) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <strong key={index} className="text-slate-900">
+            {part.slice(2, -2)}
+          </strong>
+        ) : (
+          part
+        )
+      )}
+    </div>
+  );
 };
 
 const SmartAssistantModal = ({ isOpen, onClose }) => {
@@ -32,10 +46,12 @@ const SmartAssistantModal = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setConversation([{
-          role: 'assistant',
-          content: "Hello! How can I assist you?"
-      }]);
+      setConversation([
+        {
+          role: "assistant",
+          content: "Hello! How can I assist you?",
+        },
+      ]);
       setInput("");
     }
   }, [isOpen]);
@@ -48,18 +64,30 @@ const SmartAssistantModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage = { role: 'user', content: input };
+    const userMessage = { role: "user", content: input };
     const newConversation = [...conversation, userMessage];
     setConversation(newConversation);
     setInput("");
     setIsLoading(true);
 
     try {
-      const history = newConversation.map(msg => ({ role: msg.role, content: msg.content }));
-      const aiResponse = await aiService.getChatResponse(history.slice(0, -1), userMessage.content);
-      setConversation(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+      const history = newConversation.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+      const aiResponse = await aiService.getChatResponse(
+        history.slice(0, -1),
+        userMessage.content
+      );
+      setConversation((prev) => [
+        ...prev,
+        { role: "assistant", content: aiResponse },
+      ]);
     } catch (error) {
-      setConversation(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
+      setConversation((prev) => [
+        ...prev,
+        { role: "assistant", content: `Error: ${error.message}` },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -68,40 +96,97 @@ const SmartAssistantModal = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center sm:justify-end p-4" onClick={onClose}>
-          <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-slate-200 h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-slate-200 h-[70vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center p-4 border-b border-slate-200">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center"><MessageSquare size={20} className="text-cyan-600"/></div>
-                    <h3 className="text-lg font-bold text-slate-900">Quick Assistant</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center">
+                  <MessageSquare size={20} className="text-cyan-600" />
                 </div>
-                <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100"><X size={20} /></button>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Quick Assistant
+                </h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-full text-slate-500 hover:bg-slate-100"
+              >
+                <X size={20} />
+              </button>
             </div>
-            
+
             <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                {conversation.map((msg, index) => (
-                    <div key={index} className={`flex gap-3 items-start ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        {msg.role === 'assistant' && <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0"><Sparkles size={16} className="text-cyan-600"/></div>}
-                        <div className={`max-w-[85%] p-3 rounded-xl ${msg.role === 'user' ? 'bg-cyan-600 text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
-                            <AIMessage text={msg.content} />
-                        </div>
+              {conversation.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`flex gap-3 items-start ${
+                    msg.role === "user"
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  {msg.role === "assistant" && (
+                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
+                      <Sparkles size={16} className="text-cyan-600" />
                     </div>
-                ))}
-                {isLoading && (
-                     <div className="flex gap-3 items-start justify-start">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0"><Sparkles size={16} className="text-cyan-600"/></div>
-                        <div className="p-3 rounded-xl bg-slate-100 text-slate-800 rounded-bl-none flex items-center gap-2">
-                            <Loader2 className="animate-spin" size={14}/> Typing...
-                        </div>
-                    </div>
-                )}
-                <div ref={messagesEndRef} />
+                  )}
+                  <div
+                    className={`max-w-[85%] p-3 rounded-xl ${
+                      msg.role === "user"
+                        ? "bg-cyan-600 text-white rounded-br-none"
+                        : "bg-slate-100 text-slate-800 rounded-bl-none"
+                    }`}
+                  >
+                    <AIMessage text={msg.content} />
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex gap-3 items-start justify-start">
+                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
+                    <Sparkles size={16} className="text-cyan-600" />
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-100 text-slate-800 rounded-bl-none flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={14} /> Typing...
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 border-t border-slate-200">
-              <form onSubmit={handleSubmit} className="flex items-center gap-2">
-                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask a quick question..." className="input-style flex-1" disabled={isLoading}/>
-                <button type="submit" className="btn-primary p-3" disabled={isLoading || !input.trim()}><Send size={18} /></button>
+              <form
+                onSubmit={handleSubmit}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask a quick question..."
+                  className="input-style flex-1"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  className="btn-primary p-3"
+                  disabled={isLoading || !input.trim()}
+                >
+                  <Send size={18} />
+                </button>
               </form>
             </div>
           </motion.div>
